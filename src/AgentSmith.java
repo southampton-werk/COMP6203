@@ -13,8 +13,8 @@ import genius.core.parties.NegotiationInfo;
  * In the second half, it offers a random bid. It only accepts the bid on the table in this phase,
  * if the utility of the bid is higher than Example Agent's last bid.
  */
-public class ExampleAgent extends AbstractNegotiationParty {
-    private final String description = "Example Agent";
+public class AgentSmith extends AbstractNegotiationParty {
+    private final String description = "Agent Smith";
 
     private Bid lastReceivedOffer; // offer on the table
     private Bid myLastOffer;
