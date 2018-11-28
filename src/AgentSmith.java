@@ -9,20 +9,40 @@ import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 
 /**
- * ExampleAgent returns the bid that maximizes its own utility for half of the negotiation session.
- * In the second half, it offers a random bid. It only accepts the bid on the table in this phase,
- * if the utility of the bid is higher than Example Agent's last bid.
+ * TODO: Update Agent Smith description
+ * Cooperative but stubborn
+ * Slow to concede - initial high threshold, lowered slowly
+ * The threshold will never fall below a set limit
+ *
+ * Utility estimator -
+ * Bidding strategy -
+ * Opponent model -
+ * Acceptance strategy -
  */
 public class AgentSmith extends AbstractNegotiationParty {
     private final String description = "Agent Smith";
 
-    private Bid lastReceivedOffer; // offer on the table
-    private Bid myLastOffer;
+    private AgentSmithBiddingStrategy biddingStrategy;
+    private AgentSmithOpponentModel opponentModel;
+    private AgentSmithAcceptanceStrategy acceptanceStrategy;
+    private AgentSmithUtilityEstimator utilityEstimator;
+
+    private Bid lastReceivedOffer; // Current offer on the table
+    private Bid myLastOffer; // Latest offer made by the agent
+    private double utilityThreshold; // TODO: Set utility threshold and descrease over time
+    // Threshold decreased linearly to begin with then try exponential
 
     @Override
     public void init(NegotiationInfo info) {
         super.init(info);
-    
+
+        biddingStrategy = new AgentSmithBiddingStrategy(this);
+        opponentModel = new AgentSmithOpponentModel();
+        acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
+        utilityEstimator = new AgentSmithUtilityEstimator();
+
+        // This is where the utility estimation is done - at the start only
+        // Rank bids here - time limit?
     }
 
     /**
@@ -34,30 +54,19 @@ public class AgentSmith extends AbstractNegotiationParty {
      */
     @Override
     public Action chooseAction(List<Class<? extends Action>> list) {
-        // According to Stacked Alternating Offers Protocol list includes
-        // Accept, Offer and EndNegotiation actions only.
-        double time = getTimeLine().getTime(); // Gets the time, running from t = 0 (start) to t = 1 (deadline).
-                                               // The time is normalized, so agents need not be
-                                               // concerned with the actual internal clock.
+        // Using Stacked Alternating Offers Protocol so only actions are Accept, Offer and EndNegotiation
+        // EndNegotiation not used - Reservation value is zero so our agent prefers to accept any deal rather than end the negotiation
 
-
-        // First half of the negotiation offering the max utility (the best agreement possible) for Example Agent
-        if (time < 0.5) {
-            return new Offer(this.getPartyId(), this.getMaxUtilityBid());
+        if (acceptanceStrategy.accept()) {
+            return new Accept(this.getPartyId(), lastReceivedOffer);
         } else {
-
-            // Accepts the bid on the table in this phase,
-            // if the utility of the bid is higher than Example Agent's last bid.
-            if (lastReceivedOffer != null
-                && myLastOffer != null
-                && this.utilitySpace.getUtility(lastReceivedOffer) > this.utilitySpace.getUtility(myLastOffer)) {
-
-                return new Accept(this.getPartyId(), lastReceivedOffer);
+            // First bid made by this agent
+            if (lastReceivedOffer == null || myLastOffer == null) {
+                myLastOffer = biddingStrategy.getInitialBid();
             } else {
-                // Offering a random bid
-                myLastOffer = generateRandomBid();
-                return new Offer(this.getPartyId(), myLastOffer);
+                myLastOffer = biddingStrategy.getNextBid();
             }
+            return new Offer(this.getPartyId(), myLastOffer);
         }
     }
 
@@ -87,12 +96,4 @@ public class AgentSmith extends AbstractNegotiationParty {
         return description;
     }
 
-    private Bid getMaxUtilityBid() {
-        try {
-            return this.utilitySpace.getMaxUtilityBid();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }
