@@ -37,6 +37,7 @@ public class AgentSmithOpponentModel {
 			}
 		}
 		//find freq
+		
 		for(int i = 0; i< issueList.size(); i ++)
 		{
 			for(int p = 0; p < counter[i].length; p ++)
