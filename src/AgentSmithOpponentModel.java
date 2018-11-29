@@ -30,8 +30,6 @@ public class AgentSmithOpponentModel {
 	Integer[][] counter;
 	Double[] issueWeights;
 	HashMap<ArrayList<Integer>,String> discreteValueIndex = new HashMap<ArrayList<Integer>,String>();
-	HashMap<ArrayList<Integer>,Double> realValueIndex = new HashMap<ArrayList<Integer>,Double>();
-	HashMap<ArrayList<Integer>,Integer> integerValueIndex = new HashMap<ArrayList<Integer>,Integer>();
 	HashMap<Integer,Integer> issueEvaluator = new HashMap<Integer,Integer>();
 
 
@@ -57,10 +55,10 @@ public class AgentSmithOpponentModel {
 
 		om.orderOfOptions();
 		om.issueWeights();
-		
+
 		Double[][] optionOrder = om.optionOrder;
 		Double[] issueWeights = om.issueWeights;
-		
+
 		for(int i = 0; i < optionOrder.length; i ++)
 		{
 			System.out.println("Issue:"  +i);
@@ -76,15 +74,22 @@ public class AgentSmithOpponentModel {
 
 	}
 
+	public Double opponentBidUtility(Bid b)
+	{
+
+		Double utility = 0.0;
+
+
+		return utility;
+	}
+
 	public void createIndexAndCounter()
 	{
 		List<Issue> issueList = d.getIssues();
 		emptyCounter = new Integer[issueList.size()][];
 		discreteValueIndex = new HashMap<ArrayList<Integer>,String>();
-		realValueIndex = new HashMap<ArrayList<Integer>,Double>();
-		integerValueIndex = new HashMap<ArrayList<Integer>,Integer>();
 		issueEvaluator = new HashMap<Integer,Integer>();
-		
+
 		ArrayList<Integer> valueKey;
 
 		//create counter
@@ -92,57 +97,29 @@ public class AgentSmithOpponentModel {
 		{
 			Issue iss = issueList.get(i);
 			issueEvaluator.put(i, iss.getNumber());
-			if(iss.getType().equals(ISSUETYPE.DISCRETE))
-			{
-				IssueDiscrete id = (IssueDiscrete) issueList.get(i);
-				emptyCounter[i] = new Integer[id.getNumberOfValues()];
-				for(Integer p= 0; p < id.getNumberOfValues(); p ++)
-				{
-					valueKey = new ArrayList<Integer>();
-					valueKey.add(i);
-					valueKey.add(p);
-					discreteValueIndex.put(valueKey, id.getValue(p).getValue());
-					emptyCounter[i][p] = 0;
-				}
-			}
-			//TODO what if real number really small or really large
-			else if(iss.getType().equals(ISSUETYPE.REAL))
-			{
-				IssueReal id = (IssueReal) issueList.get(i);
-				emptyCounter[i] = new Integer[(int) (id.getUpperBound() - id.getLowerBound())];
-				for(Integer p= 0; p < id.getNumber(); p ++)
-				{
-					valueKey = new ArrayList<Integer>();
-					valueKey.add(i);
-					valueKey.add(p);
-					realValueIndex.put(valueKey, id.getLowerBound() +p);
-					emptyCounter[i][p] = 0;
-				}	
-			}
-			else if(iss.getType().equals(ISSUETYPE.INTEGER))
-			{
-				
-				IssueInteger id = (IssueInteger) issueList.get(i);
-				emptyCounter[i] = new Integer[id.getUpperBound() - id.getLowerBound()];
-				for(Integer p= 0; p < id.getNumber(); p ++)
-				{
-					valueKey = new ArrayList<Integer>();
-					valueKey.add(i);
-					valueKey.add(p);
-					integerValueIndex.put(valueKey, id.getLowerBound() + p);
-					emptyCounter[i][p] = 0;
-				}	
-			}
 
+			IssueDiscrete id = (IssueDiscrete) issueList.get(i);
+			emptyCounter[i] = new Integer[id.getNumberOfValues()];
+			for(Integer p= 0; p < id.getNumberOfValues(); p ++)
+			{
+				valueKey = new ArrayList<Integer>();
+				valueKey.add(i);
+				valueKey.add(p);
+				discreteValueIndex.put(valueKey, id.getValue(p).getValue());
+				emptyCounter[i][p] = 0;
+			}
 		}
+
+
 	}
+
 
 	public void findFrequency()
 	{
-		
+
 		counter = emptyCounter.clone();
 		//find freq
-		
+
 		ArrayList<Integer> valueKey;
 
 		for(int i = 0; i< counter.length; i ++)
@@ -153,39 +130,14 @@ public class AgentSmithOpponentModel {
 				{
 					//TODO hashmap from issue to its evaluator
 					Value bidValue = b.getValue(issueEvaluator.get(i));
-					if(bidValue.getType().equals(ISSUETYPE.DISCRETE))
+
+					ValueDiscrete vd = (ValueDiscrete) bidValue;
+					valueKey = new ArrayList<Integer>();
+					valueKey.add(i);
+					valueKey.add(p);
+					if(vd.getValue().equals(discreteValueIndex.get(valueKey)))
 					{
-					
-						ValueDiscrete vd = (ValueDiscrete) bidValue;
-						valueKey = new ArrayList<Integer>();
-						valueKey.add(i);
-						valueKey.add(p);
-						if(vd.getValue().equals(discreteValueIndex.get(valueKey)))
-						{
-							counter[i][p] ++;
-						}
-					}
-					else if(bidValue.getType().equals(ISSUETYPE.REAL))
-					{
-						ValueReal vr = (ValueReal) bidValue;
-						valueKey = new ArrayList<Integer>();
-						valueKey.add(i);
-						valueKey.add(p);
-						if(vr.getValue() == realValueIndex.get(valueKey))
-						{
-							counter[i][p] ++;
-						}
-					}
-					else if(bidValue.getType().equals(ISSUETYPE.INTEGER))
-					{
-						ValueInteger vi = (ValueInteger) bidValue;
-						valueKey = new ArrayList<Integer>();
-						valueKey.add(i);
-						valueKey.add(p);
-						if(vi.getValue() == integerValueIndex.get(valueKey))
-						{
-							counter[i][p] ++;
-						}
+						counter[i][p] ++;
 					}
 
 
@@ -237,7 +189,7 @@ public class AgentSmithOpponentModel {
 			sumWeights += unnormalisedIssueWeights[i];
 		}
 
-		
+
 		issueWeights = new Double[counter.length];
 		for(int i = 0; i < counter.length;i ++)
 		{
