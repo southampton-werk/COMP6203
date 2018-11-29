@@ -6,74 +6,166 @@ import java.util.List;
 
 import genius.core.Bid;
 import genius.core.Domain;
+import genius.core.issue.ISSUETYPE;
 import genius.core.issue.Issue;
 import genius.core.issue.IssueDiscrete;
+import genius.core.issue.IssueInteger;
+import genius.core.issue.IssueReal;
 import genius.core.issue.Objective;
 import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
+import genius.core.issue.ValueInteger;
+import genius.core.issue.ValueReal;
 
 public class AgentSmithOpponentModel {
 
 	Domain d;
 	Bid[] listOfBids;
 
+	Integer[][] emptyCounter;
+	Double[][] optionOrder;
+	Integer[][] counter;
+	Double[] issueWeights;
+	HashMap<Integer,String> discreteValueIndex = new HashMap<Integer,String>();
+	HashMap<Integer,Double> realValueIndex = new HashMap<Integer,Double>();
+	HashMap<Integer,Integer> integerValueIndex = new HashMap<Integer,Integer>();
 
-	public void orderOfOptions()
+
+	public void createIndexAndCounter()
 	{
-
 		List<Issue> issueList = d.getIssues();
-		Integer[][] counter = new Integer[issueList.size()][];
-		HashMap<Integer,ValueDiscrete> valueIndex = new HashMap<Integer,ValueDiscrete>();
+		emptyCounter = new Integer[issueList.size()][];
+		discreteValueIndex = new HashMap<Integer,String>();
+		realValueIndex = new HashMap<Integer,Double>();
+		integerValueIndex = new HashMap<Integer,Integer>();
 
 		//create counter
 		for(Integer i = 0; i < issueList.size(); i ++)
 		{
-			IssueDiscrete id = (IssueDiscrete) issueList.get(i);
-			counter[i] = new Integer[id.getNumberOfValues()];
-			for(Integer p= 0; p < id.getNumberOfValues(); p ++)
+			Issue iss = issueList.get(i);
+			if(iss.getType().equals(ISSUETYPE.DISCRETE))
 			{
-				valueIndex.put(p, id.getValue(p));
-				counter[i][p] = 0;
+				IssueDiscrete id = (IssueDiscrete) issueList.get(i);
+				emptyCounter[i] = new Integer[id.getNumberOfValues()];
+				for(Integer p= 0; p < id.getNumberOfValues(); p ++)
+				{
+					discreteValueIndex.put(p, id.getValue(p).getValue());
+					emptyCounter[i][p] = 0;
+				}
 			}
+			//TODO what if real number really small or really large
+			else if(iss.getType().equals(ISSUETYPE.REAL))
+			{
+				IssueReal id = (IssueReal) issueList.get(i);
+				emptyCounter[i] = new Integer[(int) (id.getUpperBound() - id.getLowerBound())];
+				for(Integer p= 0; p < id.getNumber(); p ++)
+				{
+					realValueIndex.put(p, id.getLowerBound() +p);
+					emptyCounter[i][p] = 0;
+				}	
+			}
+			else if(iss.getType().equals(ISSUETYPE.INTEGER))
+			{
+				IssueInteger id = (IssueInteger) issueList.get(i);
+				emptyCounter[i] = new Integer[id.getUpperBound() - id.getLowerBound()];
+				for(Integer p= 0; p < id.getNumber(); p ++)
+				{
+					integerValueIndex.put(p, id.getLowerBound() + p);
+					emptyCounter[i][p] = 0;
+				}	
+			}
+
 		}
+	}
+
+	public void findFrequency()
+	{
+		Integer[][] counter = emptyCounter.clone();
 		//find freq
-		
-		for(int i = 0; i< issueList.size(); i ++)
+		for(int i = 0; i< counter.length; i ++)
 		{
 			for(int p = 0; p < counter[i].length; p ++)
 			{
 				for(Bid b: listOfBids)
 				{
-					ValueDiscrete bidValue = (ValueDiscrete) b.getValue(i);
-					if(bidValue.equals(valueIndex.get(p)))
+
+					Value bidValue = b.getValue(i);
+					if(bidValue.getType().equals(ISSUETYPE.DISCRETE))
 					{
-						counter[i][p] ++;
+						ValueDiscrete vd = (ValueDiscrete) bidValue;
+						if(vd.getValue().equals(discreteValueIndex.get(p)))
+						{
+							counter[i][p] ++;
+						}
 					}
+					else if(bidValue.getType().equals(ISSUETYPE.REAL))
+					{
+						ValueReal vr = (ValueReal) bidValue;
+						if(vr.getValue() == realValueIndex.get(p))
+						{
+							counter[i][p] ++;
+						}
+					}
+					else if(bidValue.getType().equals(ISSUETYPE.INTEGER))
+					{
+						ValueInteger vi = (ValueInteger) bidValue;
+						if(vi.getValue() == integerValueIndex.get(p))
+						{
+							counter[i][p] ++;
+						}
+					}
+
+
 
 
 				}
 			}
 		}
+	}
 
-		Integer[][] optionOrder = new Integer[issueList.size()][];
-		
-		
-		
-		for(int i = 0; i< issueList.size(); i ++)
+	public void orderOfOptions()
+	{
+
+		optionOrder = new Double[ counter.length][];
+		for(int i = 0; i<  counter.length; i ++)
 		{
 			ArrayIndexComparator comparator = new ArrayIndexComparator(counter[i]);
 			Integer[] indexes = comparator.createIndexArray();
 			Arrays.sort(indexes, comparator);	
-			
+
 			for(int p = 0; p < indexes.length;p ++)
 			{
-				indexes[p] = ((indexes.length - indexes[p] + 1)/indexes.length);
+				Double d = (double) (indexes.length - indexes[p] + 1);
+				d /= (double) indexes.length;
+				optionOrder[i][p] = d;
 			}
-			
-			optionOrder[i] = indexes;
+
 		}
 
 
+
+	}
+
+	public void issueWeights()
+	{
+		Double[] unnormalisedIssueWeights = new Double[counter.length];
+
+		double sumWeights = 0;
+		for(int i = 0; i < counter.length;i ++)
+		{
+			
+			for(int p = 0; p < counter[i].length; p ++)
+			{
+				unnormalisedIssueWeights[i] += (double) (counter[i][p] ^ 2) / (listOfBids.length ^ 2);
+			}
+			
+			sumWeights += unnormalisedIssueWeights[i];
+		}
+		
+		for(int i = 0; i < counter.length;i ++)
+		{
+			issueWeights[i] = unnormalisedIssueWeights[i] / sumWeights;
+		}
 
 	}
 
