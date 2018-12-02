@@ -1,20 +1,17 @@
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.List;
-import java.util.Random;
-
 import genius.core.AgentID;
 import genius.core.Bid;
 import genius.core.Domain;
 import genius.core.actions.Accept;
 import genius.core.actions.Action;
 import genius.core.actions.Offer;
-import genius.core.issue.Issue;
 import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 import genius.core.uncertainty.BidRanking;
 import genius.core.uncertainty.ExperimentalUserModel;
 import genius.core.utility.AbstractUtilitySpace;
+
+import java.util.List;
+import java.util.Random;
 
 /**
  * TODO: Update Agent Smith description

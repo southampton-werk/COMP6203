@@ -4,14 +4,10 @@ import genius.core.issue.Issue;
 import genius.core.issue.ValueDiscrete;
 import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
 import genius.core.uncertainty.BidRanking;
-import genius.core.utility.EvaluatorDiscrete;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 public class AgentSmithUtilityEstimator extends AdditiveUtilitySpaceFactory {
 
