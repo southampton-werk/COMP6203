@@ -14,7 +14,7 @@ public class AgentSmithAcceptanceStrategy {
 
     /**
      * Constructor to pass reference to the agent
-     * @param agent
+     * @param agent - the reference to AgentSmith
      */
     public AgentSmithAcceptanceStrategy(AgentSmith agent) {
         this.agent = agent;
@@ -23,12 +23,12 @@ public class AgentSmithAcceptanceStrategy {
     /**
      * A method to return if the agent should accept the current offer
      *
-     * Decides based on if opponent is predicted to offer higher utility bid in the future
      * No bid below the threshold is accepted and
      * if the negotiation is near the end the last offer is accepted
      * @return true = accept, false = make new offer
      */
     public boolean accept() {
+        // TODO: write accept method
         return false;
     }
 }

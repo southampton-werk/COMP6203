@@ -15,7 +15,7 @@ public class AgentSmithBiddingStrategy {
 
     /**
      * Constructor to pass reference to the agent
-     * @param agent
+     * @param agent - the reference to AgentSmith
      */
     public AgentSmithBiddingStrategy(AgentSmith agent) {
         this.agent = agent;
@@ -27,17 +27,23 @@ public class AgentSmithBiddingStrategy {
      * @return initial bid
      */
     public Bid getInitialBid() {
+        try {
+            return agent.getUtilitySpace().getMaxUtilityBid();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     /**
      * Method to get the next bid the agent should make
      * Uses it's estimated utility threshold to find bids and
-     * generates a list of bids most likely to have greatest utility for opponent using the opponent model
-     * It then pick best utility for itself from list
+     * generates a list of bids above that threshold to get all bids with best utility for itself
+     * It then picks the most likely to have greatest utility for opponent using the opponent model
      * @return next bid
      */
     public Bid getNextBid() {
+        // TODO: Use nash point generator to find next bid
         return null;
     }
 }

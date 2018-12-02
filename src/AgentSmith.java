@@ -11,8 +11,10 @@ import genius.core.parties.NegotiationInfo;
 /**
  * TODO: Update Agent Smith description
  * Cooperative but stubborn
- * Slow to concede - initial high threshold, lowered slowly
- * The threshold will never fall below a set limit
+ * Slow to concede - initial high threshold
+ * Offers it's maximum utility bid for first few rounds to allow time to generate a good opponent model
+ * After this, the Nash point is estimated using the agent's estimated utility and opponent model
+ * The minimum utility threshold is then set to just below the Nash point
  *
  * Utility estimator -
  * Bidding strategy -
@@ -29,7 +31,7 @@ public class AgentSmith extends AbstractNegotiationParty {
 
     private Bid lastReceivedOffer; // Current offer on the table
     private Bid myLastOffer; // Latest offer made by the agent
-    private double utilityThreshold; // TODO: Set utility threshold and descrease over time
+    private double utilityThreshold; // TODO: Set utility threshold and decrease over time
     // Threshold decreased linearly to begin with then try exponential
 
     @Override
@@ -43,6 +45,14 @@ public class AgentSmith extends AbstractNegotiationParty {
 
         // This is where the utility estimation is done - at the start only
         // Rank bids here - time limit?
+
+        try {
+            utilityThreshold = this.getUtilitySpace().getUtility(this.getUtilitySpace().getMaxUtilityBid());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Random high threshold set if cannot access maximum possible utility
+            utilityThreshold = 0.95;
+        }
     }
 
     /**
@@ -61,8 +71,14 @@ public class AgentSmith extends AbstractNegotiationParty {
             return new Accept(this.getPartyId(), lastReceivedOffer);
         } else {
             // First bid made by this agent
-            if (lastReceivedOffer == null || myLastOffer == null) {
+            // The agent is stubborn for the first 10% of the time, offering only it's initial bid
+            // This is so the agent has a chance to generate a good model of the opponent (no discount factor)
+            if ((lastReceivedOffer == null || myLastOffer == null) && getTimeLine().getTime() < 0.1) {
                 myLastOffer = biddingStrategy.getInitialBid();
+                if (myLastOffer == null) {
+                    // Fallback in case exception occurred getting initial bid, always offer something
+                    myLastOffer = generateRandomBid();
+                }
             } else {
                 myLastOffer = biddingStrategy.getNextBid();
             }
@@ -81,7 +97,7 @@ public class AgentSmith extends AbstractNegotiationParty {
 
         if (act instanceof Offer) { // sender is making an offer
             Offer offer = (Offer) act;
-
+            // TODO: store best offer received so far
             // storing last received offer
             lastReceivedOffer = offer.getBid();
         }
