@@ -5,8 +5,8 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" path="genius-9.1.1"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/home/jake/eclipse-workspace/6203/genius-9.1.1/genius-9.1.1.jar"/>
+	<classpathentry kind="src" path="genius-9.1.5"/>
+	<classpathentry kind="lib" path="genius-9.1.5/genius-9.1.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
