@@ -113,6 +113,7 @@ public class AgentSmith extends AbstractNegotiationParty {
             Offer offer = (Offer) act;
             // storing last received offer
             lastReceivedOffer = offer.getBid();
+            opponentModel.recievedBid(offer.getBid());
             // Storing the best bid offered by the opponent (i.e. the one with highest utility for us)
             if (bestOfferSoFar == null) {
                 bestOfferSoFar = lastReceivedOffer;
