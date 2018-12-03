@@ -1,9 +1,15 @@
 import genius.core.Bid;
+import genius.core.BidIterator;
 import genius.core.Domain;
 import genius.core.utility.UtilitySpace;
 
+import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class to generate the estimated Nash point given the current negotiation domain, the estimated utility space
+ * for Agent Smith, and the estimated opponent model
+ */
 public class NashPointGenerator {
 
     /**
@@ -72,35 +78,62 @@ public class NashPointGenerator {
         public double getOpponentUtility() {
             return opponentUtility;
         }
+
+        public void setOpponentUtility(double utility) {
+            this.opponentUtility = utility;
+        }
     }
 
     private Domain domain;
     private UtilitySpace agentUtilitySpace;
-    private UtilitySpace opponentUtilitySpace;
+    private AgentSmithOpponentModel opponentModel;
     private List<BidPoint> bidSpace; // All bid points
     private List<BidPoint> paretoFrontier;
     private BidPoint nashPoint;
+    private static final int ITERATION_LIMIT = 25000; // Maximum number of iterations before it cuts off
+    private boolean bidSpaceUpdated;
 
     /**
      * A constructor to set the attributes needed to calculate the nash point
      * @param domain the domain of the negotiation
      * @param agentUtilitySpace the utility space for Agent Smith - this should not change after initially estimated
-     * @param opponentUtilitySpace the utility space for the opponent - this will change during the negotiation
+     * @param opponentModel the opponent model for the opponent - this will change during the negotiation
      */
-    public NashPointGenerator(Domain domain, UtilitySpace agentUtilitySpace, UtilitySpace opponentUtilitySpace) {
+    public NashPointGenerator(Domain domain, UtilitySpace agentUtilitySpace, AgentSmithOpponentModel opponentModel) {
         this.domain = domain;
         this.agentUtilitySpace = agentUtilitySpace;
-        this.opponentUtilitySpace = opponentUtilitySpace;
-        // TODO: create method to create bid space (all bid points)
+        this.opponentModel = opponentModel;
+        paretoFrontier = new ArrayList<BidPoint>();
+        createBidSpace();
+    }
+
+    /**
+     * A method to create all the bid points
+     */
+    private void createBidSpace() {
+        bidSpace = new ArrayList<BidPoint>();
+        BidIterator iterator = new BidIterator(domain);
+        int iterations = 0;
+
+        while (iterator.hasNext() && iterations < ITERATION_LIMIT) {
+            Bid bid = iterator.next();
+            bidSpace.add(new BidPoint(bid, agentUtilitySpace.getUtility(bid), opponentModel.opponentBidUtility(bid)));
+            iterations++;
+        }
+        bidSpaceUpdated = true;
     }
 
     /**
      * A method to update the bid space
      * This should be called whenever the opponent utility space is modified
-     * @param opponentUtilitySpace the estimated utility space for the opponent
+     * @param opponentModel the estimated model for the opponent
      */
-    public void updateBidSpace(UtilitySpace opponentUtilitySpace) {
-        // TODO: update bid space
+    public void updateBidSpace(AgentSmithOpponentModel opponentModel) {
+        this.opponentModel = opponentModel;
+        for (BidPoint bp : bidSpace) {
+            bp.setOpponentUtility(this.opponentModel.opponentBidUtility(bp.getBid()));
+        }
+        bidSpaceUpdated = true;
     }
 
     /**
@@ -108,12 +141,48 @@ public class NashPointGenerator {
      * @return the nash point bid
      */
     public Bid getNashPoint(){
-        // TODO: finish method for getting Nash point
-        // Calculate pareto frontier by finding strictly dominating bids
-        // Loop through pareto frontier and find nash point
-        // Generalise so can use these methods to draw graph later if needed
-        return null;
+        // Only compute if bid space has been updated since last computation or no Nash point exists
+        if (bidSpaceUpdated || nashPoint == null) {
+            bidSpaceUpdated = false;
+
+            // Calculate pareto frontier by finding strictly dominating bids
+            List<BidPoint> frontierPointsToRemove = new ArrayList<BidPoint>();
+            for (BidPoint bp : bidSpace) {
+                for (BidPoint f : paretoFrontier) {
+                    if (f.isDominatedBy(bp)) {
+                        frontierPointsToRemove.add(f);
+                    }
+                }
+                // A bid has been dominated - the old one needs removing and the new one adding
+                if (!frontierPointsToRemove.isEmpty()) {
+                    paretoFrontier.removeAll(frontierPointsToRemove);
+                    paretoFrontier.add(bp);
+                    // Reset points to remove
+                    frontierPointsToRemove = new ArrayList<BidPoint>();
+                }
+            }
+
+            double maxUtilityProduct = -1;
+            double currentUtilityProduct = 0;
+            // Loop through pareto frontier and find Nash point
+            for (BidPoint bp : paretoFrontier) {
+                currentUtilityProduct = bp.getUtilityProduct();
+                if (currentUtilityProduct > maxUtilityProduct) {
+                    nashPoint = bp;
+                    maxUtilityProduct = currentUtilityProduct;
+                }
+            }
+        }
+
+        return nashPoint == null ? null : nashPoint.getBid();
     }
 
-    // TODO: write method to access bid space / pareto frontier if wanting to draw graph later
+    /**
+     * A method to get the Agent Smith's utility at the Nash point
+     * @return agent's utility at Nash point
+     */
+    public double getNashUtility() {
+        return nashPoint.getAgentUtility();
+    }
+    // TODO: Generalise so can use these methods to draw graph later if needed
 }

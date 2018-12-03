@@ -1,3 +1,4 @@
+import genius.core.Bid;
 import genius.core.actions.Action;
 
 /**
@@ -24,11 +25,11 @@ public class AgentSmithAcceptanceStrategy {
      * A method to return if the agent should accept the current offer
      *
      * No bid below the threshold is accepted and
-     * if the negotiation is near the end the last offer is accepted
+     * if the negotiation is near the end the last offer is accepted - an agreement is better than nothing
      * @return true = accept, false = make new offer
      */
-    public boolean accept() {
-        // TODO: write accept method
-        return false;
+    public boolean accept(Bid offer) {
+        // Accept offer if greater than threshold or time running out (last 5% of time) to avoid 0 utility
+        return (agent.getUtility(offer) > agent.getUtilityThreshold()) || (agent.getTimeLine().getTime() > 0.95);
     }
 }
