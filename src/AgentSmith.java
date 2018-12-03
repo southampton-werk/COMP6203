@@ -1,12 +1,17 @@
-import java.util.List;
-
 import genius.core.AgentID;
 import genius.core.Bid;
+import genius.core.Domain;
 import genius.core.actions.Accept;
 import genius.core.actions.Action;
 import genius.core.actions.Offer;
 import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
+import genius.core.uncertainty.BidRanking;
+import genius.core.uncertainty.ExperimentalUserModel;
+import genius.core.utility.AbstractUtilitySpace;
+
+import java.util.List;
+import java.util.Random;
 
 /**
  * TODO: Update Agent Smith description
@@ -27,7 +32,6 @@ public class AgentSmith extends AbstractNegotiationParty {
     private AgentSmithBiddingStrategy biddingStrategy;
     private AgentSmithOpponentModel opponentModel;
     private AgentSmithAcceptanceStrategy acceptanceStrategy;
-    private AgentSmithUtilityEstimator utilityEstimator;
 
     private Bid lastReceivedOffer; // Current offer on the table
     private Bid myLastOffer; // Latest offer made by the agent
@@ -44,8 +48,8 @@ public class AgentSmith extends AbstractNegotiationParty {
         biddingStrategy = new AgentSmithBiddingStrategy(this);
         opponentModel = new AgentSmithOpponentModel(this.getDomain());
         acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
-        utilityEstimator = new AgentSmithUtilityEstimator();
-
+        utilitySpace = estimateUtilitySpace();
+        //evaluateEstimatedUtilitySpace();
         // This is where the utility estimation is done - at the start only
         // Rank bids here - time limit?
 
@@ -83,6 +87,17 @@ public class AgentSmith extends AbstractNegotiationParty {
             }
             return new Offer(this.getPartyId(), myLastOffer);
         }
+    }
+
+    @Override
+    public AbstractUtilitySpace estimateUtilitySpace() {
+        Domain domain = getDomain();
+        AgentSmithUtilityEstimator factory = new AgentSmithUtilityEstimator(domain);
+        BidRanking bidRanking = userModel.getBidRanking();
+        factory.estimateUsingBidRanks(bidRanking);
+        AbstractUtilitySpace us = factory.getUtilitySpace();
+
+        return us;
     }
 
     /**
@@ -166,4 +181,24 @@ public class AgentSmith extends AbstractNegotiationParty {
         return opponentModel;
     }
 
+    private void evaluateEstimatedUtilitySpace(){
+        AbstractUtilitySpace ours = utilitySpace;
+        AbstractUtilitySpace real = ((ExperimentalUserModel) userModel).getRealUtilitySpace();
+        System.out.println("Ours: \n" + ours);
+        System.out.println("Real: \n" + real);
+
+        try {
+            System.out.println("Our Best: " + ours.getMaxUtilityBid());
+            System.out.println("Real Best: " + real.getMaxUtilityBid());
+            System.out.println("Our Worst: " + ours.getMinUtilityBid());
+            System.out.println("Real Worst: " + real.getMinUtilityBid());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("ours,real");
+        for (int i = 0; i < 10000; i++) {
+            Bid randomBid =  getDomain().getRandomBid(new Random());
+            System.out.println(real.getUtility(randomBid) + "," + ours.getUtility(randomBid));
+        }
+    }
 }

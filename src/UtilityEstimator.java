@@ -8,8 +8,10 @@ import genius.core.uncertainty.BidRanking;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 
-public class AgentSmithUtilityEstimator extends AdditiveUtilitySpaceFactory {
+public class UtilityEstimator extends AdditiveUtilitySpaceFactory {
 
     private Domain domain;
 
@@ -19,7 +21,7 @@ public class AgentSmithUtilityEstimator extends AdditiveUtilitySpaceFactory {
      *
      * @param d
      */
-    public AgentSmithUtilityEstimator(Domain d) {
+    public UtilityEstimator(Domain d) {
         super(d);
         domain = d;
     }
@@ -43,10 +45,9 @@ public class AgentSmithUtilityEstimator extends AdditiveUtilitySpaceFactory {
         }
 
         HashMap<Issue, HashMap<ValueDiscrete, Double>> means = new HashMap<>();
-        HashMap<Issue, List<Double>> stddevs = new HashMap<>();
+        HashMap<Issue, HashMap<ValueDiscrete, Double>> stddevs = new HashMap<>();
         for(Issue issue: issueValues.keySet()){
             HashMap<ValueDiscrete, List<Integer>> valuePositions = issueValues.get(issue);
-            ArrayList<Double> stddevlist = new ArrayList<>();
             for(ValueDiscrete value : valuePositions.keySet()){
                 List<Integer> positions  = valuePositions.get(value);
                 double mean = positions.stream().mapToInt(e -> e).average().orElseThrow(() -> new RuntimeException("Value exists with no positions for it"));
@@ -55,21 +56,16 @@ public class AgentSmithUtilityEstimator extends AdditiveUtilitySpaceFactory {
                     stddev += (v - mean) * (v - mean);
                 }
                 stddev /= (double) positions.size();
-
-                //mean = r.getSize() - mean;
-                means.computeIfAbsent(issue, k -> new HashMap<>()).put(value, mean);
-                //stddevs.computeIfAbsent(issue, k -> new ArrayList<>()).add(stddev);
-                stddevlist.add(stddev);
-                this.setUtility(issue, value, mean);
-
+                stddev = 1d / stddev; // So higher stddev = lower weighting
+                mean = r.getSize() - mean;
+                means.get(issue).put(value, mean);
+                stddevs.get(issue).put(value, stddev);
+                this.setUtility(issue, value, mean * stddev);
             }
-            Double maxStddev = stddevlist.stream().mapToDouble(e -> e).max().getAsDouble();
-            getUtilitySpace().setWeight(issue, 1d / maxStddev);
         }
-        this.normalizeWeightsByMaxValues();
+        super.normalizeWeightsByMaxValues();
 
     }
-
 
 
 }
