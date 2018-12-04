@@ -16,8 +16,10 @@ import java.util.Random;
 /**
  * TODO: Update Agent Smith description
  * Cooperative but stubborn
- * Slow to concede - initial high threshold, lowered slowly
- * The threshold will never fall below a set limit
+ * Slow to concede - initial high threshold
+ * Offers it's maximum utility bid for first few rounds to allow time to generate a good opponent model
+ * After this, the Nash point is estimated using the agent's estimated utility and opponent model
+ * The minimum utility threshold is then set to just below the Nash point
  *
  * Utility estimator -
  * Bidding strategy -
@@ -33,20 +35,34 @@ public class AgentSmith extends AbstractNegotiationParty {
 
     private Bid lastReceivedOffer; // Current offer on the table
     private Bid myLastOffer; // Latest offer made by the agent
-    private double utilityThreshold; // TODO: Set utility threshold and descrease over time
-    // Threshold decreased linearly to begin with then try exponential
+    private double utilityThreshold;
+    // Initial idea - Threshold decreased linearly to begin with then try exponential
+    // Trying to set threshold to Nash point instead
+
+    private Bid bestOfferSoFar = null; // Best bid offered so far from opponent
 
     @Override
     public void init(NegotiationInfo info) {
         super.init(info);
 
         biddingStrategy = new AgentSmithBiddingStrategy(this);
-        opponentModel = new AgentSmithOpponentModel();
+        opponentModel = new AgentSmithOpponentModel(this.getDomain());
         acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
         utilitySpace = estimateUtilitySpace();
         //evaluateEstimatedUtilitySpace();
         // This is where the utility estimation is done - at the start only
         // Rank bids here - time limit?
+
+        try {
+            // Setting utility threshold as high as possible to begin with
+            // This means it's unlikely any bids will be accepted to begin with and gives the agent
+            // a chance to model the opponent to find the Nash point
+            utilityThreshold = this.getUtility(this.getUtilitySpace().getMaxUtilityBid());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Random high threshold set if cannot access maximum possible utility
+            utilityThreshold = 0.95;
+        }
     }
 
     /**
@@ -61,14 +77,13 @@ public class AgentSmith extends AbstractNegotiationParty {
         // Using Stacked Alternating Offers Protocol so only actions are Accept, Offer and EndNegotiation
         // EndNegotiation not used - Reservation value is zero so our agent prefers to accept any deal rather than end the negotiation
 
-        if (acceptanceStrategy.accept()) {
+        if (acceptanceStrategy.accept(lastReceivedOffer)) {
             return new Accept(this.getPartyId(), lastReceivedOffer);
         } else {
-            // First bid made by this agent
-            if (lastReceivedOffer == null || myLastOffer == null) {
-                myLastOffer = biddingStrategy.getInitialBid();
-            } else {
-                myLastOffer = biddingStrategy.getNextBid();
+            myLastOffer = biddingStrategy.getBid();
+            if (myLastOffer == null) {
+                // Fallback in case exception occurred getting bid, always offer something
+                myLastOffer = generateRandomBid();
             }
             return new Offer(this.getPartyId(), myLastOffer);
         }
@@ -96,21 +111,76 @@ public class AgentSmith extends AbstractNegotiationParty {
 
         if (act instanceof Offer) { // sender is making an offer
             Offer offer = (Offer) act;
-
             // storing last received offer
             lastReceivedOffer = offer.getBid();
+            opponentModel.recievedBid(offer.getBid());
+            // Storing the best bid offered by the opponent (i.e. the one with highest utility for us)
+            if (bestOfferSoFar == null) {
+                bestOfferSoFar = lastReceivedOffer;
+            } else {
+                if (this.getUtility(lastReceivedOffer) > this.getUtility(bestOfferSoFar)) {
+                    bestOfferSoFar = lastReceivedOffer;
+                }
+            }
         }
     }
 
     /**
      * A human-readable description for this party.
-     * @return
+     * @return agent description
      */
     @Override
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Get the current utility threshold of the agent
+     * @return utility threshold
+     */
+    public double getUtilityThreshold() {
+        return utilityThreshold;
+    }
+
+    /**
+     * Get the last offer the agent received
+     * @return last received offer
+     */
+    public Bid getLastReceivedOffer() {
+        return lastReceivedOffer;
+    }
+
+    /**
+     * Get the last offer this agent made
+     * @return the agent's last offer
+     */
+    public Bid getMyLastOffer() {
+        return myLastOffer;
+    }
+
+    /**
+     * Get the best offer made so far from the opponent
+     * @return opponent's best offer so far
+     */
+    public Bid getBestOfferSoFar() {
+        return bestOfferSoFar;
+    }
+
+    /**
+     * Set the utility threshold of this agent
+     * @param threshold new utility threshold
+     */
+    public void setUtilityThreshold(double threshold) {
+        this.utilityThreshold = threshold;
+    }
+
+    /**
+     * Get the model for the agent's opponent
+     * @return opponent model
+     */
+    public AgentSmithOpponentModel getOpponentModel() {
+        return opponentModel;
+    }
 
     private void evaluateEstimatedUtilitySpace(){
         AbstractUtilitySpace ours = utilitySpace;
@@ -132,5 +202,4 @@ public class AgentSmith extends AbstractNegotiationParty {
             System.out.println(real.getUtility(randomBid) + "," + ours.getUtility(randomBid));
         }
     }
-
 }
