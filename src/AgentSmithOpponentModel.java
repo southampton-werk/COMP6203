@@ -44,20 +44,21 @@ public class AgentSmithOpponentModel {
 		DomainImpl d = new DomainImpl("domaintest.xml");
 
 		Bid[] listOfBids = new Bid[3];
-		
+
 		AgentSmithOpponentModel om = new AgentSmithOpponentModel(d);
 
 
-		for(int i = 0; i < 3; i ++)
+		for(int i = 0; i < 20; i ++)
 		{
 
 			om.recievedBid(d.getRandomBid(new Random()));
+			System.out.println(om.opponentBidUtility(om.d.getRandomBid(new Random())));
+
 
 
 		}
 
 
-		System.out.println(om.opponentBidUtility(om.d.getRandomBid(new Random())));
 
 
 	}
@@ -123,7 +124,7 @@ public class AgentSmithOpponentModel {
 		{
 			for(int p = 0; p < counter[i].length; p ++)
 			{
-				
+
 				Value bidValue = b.getValue(issueEvaluator.get(i));
 				ValueDiscrete vd = (ValueDiscrete) bidValue;
 				valueKey = new ArrayList<Integer>();
@@ -175,7 +176,7 @@ public class AgentSmithOpponentModel {
 			}
 		}
 	}
-	*/
+	 */
 	private void orderOfOptions()
 	{
 
@@ -211,7 +212,10 @@ public class AgentSmithOpponentModel {
 			for(int p = 0; p < counter[i].length; p ++)
 			{
 
-				unnormalisedIssueWeights[i] += (double) (counter[i][p] ^ 2) / (numberOfBids ^ 2);
+				if(numberOfBids != 0 && counter[i][p] != 0)
+				{
+					unnormalisedIssueWeights[i] += (Math.pow(counter[i][p], 2) / (Math.pow(numberOfBids, 2) ));
+				}
 			}
 
 			sumWeights += unnormalisedIssueWeights[i];
