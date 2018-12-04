@@ -45,9 +45,6 @@ public class AgentSmith extends AbstractNegotiationParty {
     public void init(NegotiationInfo info) {
         super.init(info);
 
-        biddingStrategy = new AgentSmithBiddingStrategy(this);
-        opponentModel = new AgentSmithOpponentModel(this.getDomain());
-        acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
         utilitySpace = estimateUtilitySpace();
         //evaluateEstimatedUtilitySpace();
         // This is where the utility estimation is done - at the start only
@@ -63,6 +60,10 @@ public class AgentSmith extends AbstractNegotiationParty {
             // Random high threshold set if cannot access maximum possible utility
             utilityThreshold = 0.95;
         }
+
+        opponentModel = new AgentSmithOpponentModel(this.getDomain());
+        acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
+        biddingStrategy = new AgentSmithBiddingStrategy(this);
     }
 
     /**
@@ -78,13 +79,19 @@ public class AgentSmith extends AbstractNegotiationParty {
         // EndNegotiation not used - Reservation value is zero so our agent prefers to accept any deal rather than end the negotiation
 
         if (acceptanceStrategy.accept(lastReceivedOffer)) {
+            System.out.println("Accepted at: " + getTimeLine().getTime());
             return new Accept(this.getPartyId(), lastReceivedOffer);
         } else {
-            myLastOffer = biddingStrategy.getBid();
-            if (myLastOffer == null) {
+            try {
+                System.out.println("Starting to send new bid: " + getTimeLine().getTime());
+                myLastOffer = biddingStrategy.getBid();
+            } catch(Exception e) {
+                e.printStackTrace();
                 // Fallback in case exception occurred getting bid, always offer something
+                // TODO: make this more smart?
                 myLastOffer = generateRandomBid();
             }
+            System.out.println("Bid sent at: " + getTimeLine().getTime());
             return new Offer(this.getPartyId(), myLastOffer);
         }
     }
@@ -113,7 +120,9 @@ public class AgentSmith extends AbstractNegotiationParty {
             Offer offer = (Offer) act;
             // storing last received offer
             lastReceivedOffer = offer.getBid();
+            System.out.println("Bid received at: " + getTimeLine().getTime());
             opponentModel.recievedBid(offer.getBid());
+            System.out.println("Opponent model finished updating at: " + getTimeLine().getTime());
             // Storing the best bid offered by the opponent (i.e. the one with highest utility for us)
             if (bestOfferSoFar == null) {
                 bestOfferSoFar = lastReceivedOffer;

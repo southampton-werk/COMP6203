@@ -1,3 +1,4 @@
+import com.sun.xml.bind.v2.runtime.reflect.Lister;
 import genius.core.Bid;
 import genius.core.BidIterator;
 import genius.core.Domain;
@@ -104,7 +105,6 @@ public class NashPointGenerator {
         this.agentUtilitySpace = agentUtilitySpace;
         this.opponentModel = opponentModel;
         paretoFrontier = new ArrayList<BidPoint>();
-        createBidSpace();
     }
 
     /**
@@ -130,8 +130,12 @@ public class NashPointGenerator {
      */
     public void updateBidSpace(AgentSmithOpponentModel opponentModel) {
         this.opponentModel = opponentModel;
-        for (BidPoint bp : bidSpace) {
-            bp.setOpponentUtility(this.opponentModel.opponentBidUtility(bp.getBid()));
+        if (bidSpace == null) {
+            createBidSpace();
+        } else {
+            for (BidPoint bp : bidSpace) {
+                bp.setOpponentUtility(this.opponentModel.opponentBidUtility(bp.getBid()));
+            }
         }
         bidSpaceUpdated = true;
     }
@@ -148,6 +152,9 @@ public class NashPointGenerator {
             // Calculate pareto frontier by finding strictly dominating bids
             List<BidPoint> frontierPointsToRemove = new ArrayList<BidPoint>();
             for (BidPoint bp : bidSpace) {
+                if (paretoFrontier.isEmpty()) {
+                    paretoFrontier.add(bp);
+                }
                 for (BidPoint f : paretoFrontier) {
                     if (f.isDominatedBy(bp)) {
                         frontierPointsToRemove.add(f);
@@ -156,7 +163,9 @@ public class NashPointGenerator {
                 // A bid has been dominated - the old one needs removing and the new one adding
                 if (!frontierPointsToRemove.isEmpty()) {
                     paretoFrontier.removeAll(frontierPointsToRemove);
-                    paretoFrontier.add(bp);
+                    if (!paretoFrontier.contains(bp)) {
+                        paretoFrontier.add(bp);
+                    }
                     // Reset points to remove
                     frontierPointsToRemove = new ArrayList<BidPoint>();
                 }
@@ -174,6 +183,11 @@ public class NashPointGenerator {
             }
         }
 
+        if (nashPoint == null) {
+            System.out.println("Nash point was null");
+        } else {
+            System.out.println("Nash bid returned: " + nashPoint.getBid() + " with utility " + nashPoint.getAgentUtility());
+        }
         return nashPoint == null ? null : nashPoint.getBid();
     }
 
