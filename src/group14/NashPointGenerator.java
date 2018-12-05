@@ -1,4 +1,5 @@
-import com.sun.xml.bind.v2.runtime.reflect.Lister;
+package group14;
+
 import genius.core.Bid;
 import genius.core.BidIterator;
 import genius.core.Domain;

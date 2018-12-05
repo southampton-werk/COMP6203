@@ -1,3 +1,5 @@
+package group14;
+
 import genius.core.Bid;
 
 /**
@@ -10,16 +12,16 @@ import genius.core.Bid;
  */
 public class AgentSmithBiddingStrategy {
 
-    private AgentSmith agent;
+    private Agent14 agent;
     private double modellingDeadline = 0.1; // Deadline for initial opponent modelling to stop
     private double nashOfferDeadline = 0.8; // Deadline for Nash computed bids to stop
     private NashPointGenerator nashPointGenerator;
 
     /**
      * Constructor to pass reference to the agent
-     * @param agent - the reference to AgentSmith
+     * @param agent - the reference to group14.Agent14
      */
-    public AgentSmithBiddingStrategy(AgentSmith agent) {
+    public AgentSmithBiddingStrategy(Agent14 agent) {
         this.agent = agent;
         nashPointGenerator = new NashPointGenerator(agent.getDomain(), agent.getUtilitySpace(), agent.getOpponentModel());
     }

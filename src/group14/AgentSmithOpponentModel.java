@@ -1,3 +1,5 @@
+package group14;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,18 +11,10 @@ import java.util.Random;
 import genius.core.Bid;
 import genius.core.Domain;
 import genius.core.DomainImpl;
-import genius.core.issue.ISSUETYPE;
 import genius.core.issue.Issue;
 import genius.core.issue.IssueDiscrete;
-import genius.core.issue.IssueInteger;
-import genius.core.issue.IssueReal;
-import genius.core.issue.Objective;
 import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
-import genius.core.issue.ValueInteger;
-import genius.core.issue.ValueReal;
-import genius.core.representative.UncertainUtilitySpace;
-import genius.core.utility.UtilitySpace;
 
 public class AgentSmithOpponentModel {
 

@@ -387,7 +387,7 @@
             <partyRepItem classPath="negotiator.parties.FeedbackHillClimber" strategyParameters="">
                 <properties/>
             </partyRepItem>
-            <partyRepItem classPath="C:\Users\zrgat\OneDrive\Documents\COMP6203\Coursework\out\production\Coursework\AgentSmith.class" strategyParameters="">
+            <partyRepItem classPath="C:\Users\zrgat\OneDrive\Documents\COMP6203\Coursework\out\production\Coursework\group14\Agent14.class" strategyParameters="">
                 <properties/>
             </partyRepItem>
         </partyRepItems>

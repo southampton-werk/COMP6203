@@ -1,5 +1,6 @@
+package group14;
+
 import genius.core.Bid;
-import genius.core.actions.Action;
 
 /**
  * Acceptance strategy for Agent Smith
@@ -11,13 +12,13 @@ import genius.core.actions.Action;
  */
 public class AgentSmithAcceptanceStrategy {
 
-    private AgentSmith agent;
+    private Agent14 agent;
 
     /**
      * Constructor to pass reference to the agent
-     * @param agent - the reference to AgentSmith
+     * @param agent - the reference to group14.Agent14
      */
-    public AgentSmithAcceptanceStrategy(AgentSmith agent) {
+    public AgentSmithAcceptanceStrategy(Agent14 agent) {
         this.agent = agent;
     }
 

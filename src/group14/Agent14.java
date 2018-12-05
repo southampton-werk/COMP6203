@@ -1,3 +1,5 @@
+package group14;
+
 import genius.core.AgentID;
 import genius.core.Bid;
 import genius.core.Domain;
@@ -26,8 +28,8 @@ import java.util.Random;
  * Opponent model -
  * Acceptance strategy -
  */
-public class AgentSmith extends AbstractNegotiationParty {
-    private final String description = "Agent Smith";
+public class Agent14 extends AbstractNegotiationParty {
+    private final String description = "Group 14 - Agent Smith";
 
     private AgentSmithBiddingStrategy biddingStrategy;
     private AgentSmithOpponentModel opponentModel;

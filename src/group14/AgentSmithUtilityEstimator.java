@@ -1,3 +1,5 @@
+package group14;
+
 import genius.core.Bid;
 import genius.core.Domain;
 import genius.core.issue.Issue;
