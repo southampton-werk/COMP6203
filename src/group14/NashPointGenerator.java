@@ -5,6 +5,9 @@ import genius.core.BidIterator;
 import genius.core.Domain;
 import genius.core.utility.UtilitySpace;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -151,25 +154,8 @@ public class NashPointGenerator {
             bidSpaceUpdated = false;
 
             // Calculate pareto frontier by finding strictly dominating bids
-            List<BidPoint> frontierPointsToRemove = new ArrayList<BidPoint>();
             for (BidPoint bp : bidSpace) {
-                if (paretoFrontier.isEmpty()) {
-                    paretoFrontier.add(bp);
-                }
-                for (BidPoint f : paretoFrontier) {
-                    if (f.isDominatedBy(bp)) {
-                        frontierPointsToRemove.add(f);
-                    }
-                }
-                // A bid has been dominated - the old one needs removing and the new one adding
-                if (!frontierPointsToRemove.isEmpty()) {
-                    paretoFrontier.removeAll(frontierPointsToRemove);
-                    if (!paretoFrontier.contains(bp)) {
-                        paretoFrontier.add(bp);
-                    }
-                    // Reset points to remove
-                    frontierPointsToRemove = new ArrayList<BidPoint>();
-                }
+                addToFrontier(bp);
             }
 
             double maxUtilityProduct = -1;
@@ -187,9 +173,83 @@ public class NashPointGenerator {
         if (nashPoint == null) {
             System.out.println("Nash point was null");
         } else {
+            try {
+                PrintWriter pw = new PrintWriter(new File("bids.csv"));
+                StringBuilder sb = new StringBuilder();
+                sb.append("Agent Utility");
+                sb.append(',');
+                sb.append("Opponent Utility");
+                sb.append(',');
+                sb.append("Bid");
+                sb.append(',');
+                sb.append("Type");
+                sb.append('\n');
+
+                for (BidPoint bp : bidSpace) {
+                    String type = "Normal";
+                    if (bp.equals(nashPoint)) {
+                        type = "Nash";
+                    } else if (paretoFrontier.contains(bp)) {
+                        type = "Pareto";
+                    }
+                    sb.append(bp.getAgentUtility());
+                    sb.append(',');
+                    sb.append(bp.getOpponentUtility());
+                    sb.append(',');
+                    sb.append(bp.getBid().toString().replace(',',';'));
+                    sb.append(',');
+                    sb.append(type);
+                    sb.append('\n');
+                }
+
+                pw.write(sb.toString());
+                pw.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+
             System.out.println("Nash bid returned: " + nashPoint.getBid() + " with utility " + nashPoint.getAgentUtility());
         }
         return nashPoint == null ? null : nashPoint.getBid();
+    }
+
+    /**
+     * Add a bid point to the pareto frontier by finding the strictly dominating bids
+     * @param bp bid point to add
+     */
+    private void addToFrontier(BidPoint bp) {
+        for (BidPoint f : paretoFrontier) {
+            // If this bid point is dominated, it can't be added so return
+            if (bp.isDominatedBy(f)) {
+                return;
+            }
+            // If a point in the frontier is dominated, it needs replacing
+            if (f.isDominatedBy(bp)) {
+                removeDominated(bp, f);
+                return;
+            }
+        }
+        // Otherwise the bid must have been equal so add anyway
+        paretoFrontier.add(bp);
+    }
+
+    /**
+     * Removing a dominated bid from the frontier and replacing it with the new dominating bid
+     * @param bidPointToAdd the dominating bid point to add
+     * @param bidPointToRemove the frontier point to remove
+     */
+    private void removeDominated(BidPoint bidPointToAdd, BidPoint bidPointToRemove) {
+        // A bid has been dominated - the old one needs removing and the new one adding
+        List<BidPoint> frontierPointsToRemove = new ArrayList<BidPoint>();
+        paretoFrontier.remove(bidPointToRemove);
+        // Check if any others are also dominated by this new bid
+        for (BidPoint f : paretoFrontier) {
+            if (f.isDominatedBy(bidPointToAdd)) {
+                frontierPointsToRemove.add(f);
+            }
+        }
+        paretoFrontier.removeAll(frontierPointsToRemove);
+        paretoFrontier.add(bidPointToAdd);
     }
 
     /**
