@@ -465,6 +465,7 @@
             <domainRepItem url="file:etc/templates/anac/y2012/Laptop/Laptop-A-domain.xml">
                 <profile url="file:etc/templates/anac/y2012/Laptop/Laptop-A-prof1.xml"/>
                 <profile url="file:etc/templates/anac/y2012/Laptop/Laptop-A-prof2.xml"/>
+                <profile url="file:etc/templates/anac/y2012/Laptop/Laptop-A-domain_util1.xml"/>
             </domainRepItem>
             <domainRepItem url="file:etc/templates/anac/y2012/Laptop/Laptop-B-domain.xml">
                 <profile url="file:etc/templates/anac/y2012/Laptop/Laptop-B-prof1.xml"/>
@@ -728,7 +729,9 @@
                 <profile url="file:etc/templates/Domain16/Domain16_util5.xml"/>
                 <profile url="file:etc/templates/Domain16/Domain16_util6.xml"/>
             </domainRepItem>
-            <domainRepItem url="file:etc/templates/BigDomain/BigDomain.xml"/>
+            <domainRepItem url="file:etc/templates/BigDomain/BigDomain.xml">
+                <profile url="file:etc/templates/BigDomain/BigDomain_util1.xml"/>
+            </domainRepItem>
         </domainRepItem>
         <protocolRepItem/>
         <multiPartyProtocolRepItem/>
