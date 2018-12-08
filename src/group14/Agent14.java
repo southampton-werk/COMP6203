@@ -90,7 +90,10 @@ public class Agent14 extends AbstractNegotiationParty {
             } catch(Exception e) {
                 e.printStackTrace();
                 // Fallback in case exception occurred getting bid, always offer something
-                // TODO: make this more smart?
+                myLastOffer = generateRandomBid();
+            }
+            // Double fallback in case no exception when generating bid but bid returned still null, always offer something
+            if (myLastOffer == null) {
                 myLastOffer = generateRandomBid();
             }
             System.out.println("Bid sent at: " + getTimeLine().getTime());
