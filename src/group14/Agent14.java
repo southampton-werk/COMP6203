@@ -12,6 +12,7 @@ import genius.core.uncertainty.BidRanking;
 import genius.core.uncertainty.ExperimentalUserModel;
 import genius.core.utility.AbstractUtilitySpace;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
@@ -47,10 +48,10 @@ public class Agent14 extends AbstractNegotiationParty {
     public void init(NegotiationInfo info) {
         System.out.println("Got to init");
         super.init(info);
-        System.out.println("Starting to estimate utility....");
+        System.out.println(LocalDateTime.now() + "Starting to estimate utility....");
         // This is where the utility estimation is done - at the start only
         utilitySpace = estimateUtilitySpace();
-        System.out.println("Got passed utility estimate!");
+        System.out.println(LocalDateTime.now() + "Got passed utility estimate!");
 
         try {
             // Setting utility threshold as high as possible to begin with
@@ -66,6 +67,7 @@ public class Agent14 extends AbstractNegotiationParty {
         opponentModel = new AgentSmithOpponentModel(this.getDomain());
         acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
         biddingStrategy = new AgentSmithBiddingStrategy(this);
+        System.out.println(LocalDateTime.now() + "finished init");
     }
 
     /**

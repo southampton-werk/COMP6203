@@ -31,6 +31,6 @@ public class AgentSmithAcceptanceStrategy {
      */
     public boolean accept(Bid offer) {
         // Accept offer if greater than threshold or time running out (last 5% of time) to avoid 0 utility
-        return (agent.getUtility(offer) > agent.getUtilityThreshold()) || (agent.getTimeLine().getTime() > 0.95);
+        return (agent.getUtility(offer) >= agent.getUtilityThreshold()) || (agent.getTimeLine().getTime() > 0.95);
     }
 }
