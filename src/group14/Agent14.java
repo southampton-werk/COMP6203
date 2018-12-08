@@ -10,9 +10,12 @@ import genius.core.parties.AbstractNegotiationParty;
 import genius.core.parties.NegotiationInfo;
 import genius.core.uncertainty.BidRanking;
 import genius.core.uncertainty.ExperimentalUserModel;
+import genius.core.uncertainty.UserModel;
 import genius.core.utility.AbstractUtilitySpace;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -35,19 +38,20 @@ public class Agent14 extends AbstractNegotiationParty {
     private AgentSmithBiddingStrategy biddingStrategy;
     private AgentSmithOpponentModel opponentModel;
     private AgentSmithAcceptanceStrategy acceptanceStrategy;
-
+    private NegotiationInfo info;
     private Bid lastReceivedOffer; // Current offer on the table
     private Bid myLastOffer; // Latest offer made by the agent
     private double utilityThreshold;
     // Initial idea - Threshold decreased linearly to begin with then try exponential
     // Trying to set threshold to Nash point instead
-
+    private double proportionBidsToEstimate = 0.5;
     private Bid bestOfferSoFar = null; // Best bid offered so far from opponent
 
     @Override
     public void init(NegotiationInfo info) {
         System.out.println("Got to init");
         super.init(info);
+        this.info = info;
         System.out.println(LocalDateTime.now() + "Starting to estimate utility....");
         // This is where the utility estimation is done - at the start only
         utilitySpace = estimateUtilitySpace();
@@ -107,7 +111,20 @@ public class Agent14 extends AbstractNegotiationParty {
     public AbstractUtilitySpace estimateUtilitySpace() {
         Domain domain = getDomain();
         AgentSmithUtilityEstimator factory = new AgentSmithUtilityEstimator(domain);
-        BidRanking bidRanking = userModel.getBidRanking();
+        BidRanking bidRanking;
+        if(userModel != null) {
+            bidRanking = userModel.getBidRanking();
+        } else {
+            List<Bid> bidList = new ArrayList<>();
+
+            Random r = new Random();
+            for (int i = 0; i < ((double) domain.getNumberOfPossibleBids()) * proportionBidsToEstimate; i++) {
+                bidList.add(domain.getRandomBid(r));
+            }
+            bidList.sort(Comparator.comparingDouble(e -> utilitySpace.getUtility(e)));
+            bidRanking = new BidRanking(bidList);
+            System.out.println(bidList);
+        }
         factory.estimateUsingBidRanks(bidRanking);
         AbstractUtilitySpace us = factory.getUtilitySpace();
 
@@ -200,7 +217,12 @@ public class Agent14 extends AbstractNegotiationParty {
 
     private void evaluateEstimatedUtilitySpace(){
         AbstractUtilitySpace ours = utilitySpace;
-        AbstractUtilitySpace real = ((ExperimentalUserModel) userModel).getRealUtilitySpace();
+        AbstractUtilitySpace real;
+        if (userModel != null) {
+            real = ((ExperimentalUserModel) userModel).getRealUtilitySpace();
+        } else {
+            real = this.info.getUtilitySpace();
+        }
         System.out.println("Ours: \n" + ours);
         System.out.println("Real: \n" + real);
 
