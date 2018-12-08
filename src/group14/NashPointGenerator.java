@@ -253,11 +253,26 @@ public class NashPointGenerator {
     }
 
     /**
+     * A method to get the distance of any bid to the calculated Nash point
+     * @param b bid
+     * @return distance of bid to Nash point
+     */
+    public double distanceToNash(Bid b) {
+        double distance = -1;
+        if (nashPoint != null) {
+            double agentUtilDiff = nashPoint.getAgentUtility() - agentUtilitySpace.getUtility(b);
+            double opponentUtilDiff = nashPoint.getOpponentUtility() - opponentModel.opponentBidUtility(b);
+            // calculate Euclidean distance to Nash point
+            distance = Math.sqrt(((Math.pow(agentUtilDiff, 2)) + (Math.pow(opponentUtilDiff, 2))));
+        }
+        return distance;
+    }
+
+    /**
      * A method to get the Agent Smith's utility at the Nash point
      * @return agent's utility at Nash point
      */
     public double getNashUtility() {
         return nashPoint.getAgentUtility();
     }
-    // TODO: Generalise so can use these methods to draw graph later if needed
 }

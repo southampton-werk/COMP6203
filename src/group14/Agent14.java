@@ -45,12 +45,12 @@ public class Agent14 extends AbstractNegotiationParty {
 
     @Override
     public void init(NegotiationInfo info) {
+        System.out.println("Got to init");
         super.init(info);
-
-        utilitySpace = estimateUtilitySpace();
-        //evaluateEstimatedUtilitySpace();
+        System.out.println("Starting to estimate utility....");
         // This is where the utility estimation is done - at the start only
-        // Rank bids here - time limit?
+        utilitySpace = estimateUtilitySpace();
+        System.out.println("Got passed utility estimate!");
 
         try {
             // Setting utility threshold as high as possible to begin with
@@ -90,7 +90,10 @@ public class Agent14 extends AbstractNegotiationParty {
             } catch(Exception e) {
                 e.printStackTrace();
                 // Fallback in case exception occurred getting bid, always offer something
-                // TODO: make this more smart?
+                myLastOffer = generateRandomBid();
+            }
+            // Double fallback in case no exception when generating bid but bid returned still null, always offer something
+            if (myLastOffer == null) {
                 myLastOffer = generateRandomBid();
             }
             System.out.println("Bid sent at: " + getTimeLine().getTime());
