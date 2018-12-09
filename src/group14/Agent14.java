@@ -123,7 +123,7 @@ public class Agent14 extends AbstractNegotiationParty {
             }
             bidList.sort(Comparator.comparingDouble(e -> utilitySpace.getUtility(e)));
             bidRanking = new BidRanking(bidList);
-            System.out.println(bidList);
+            userModel = new UserModel(bidRanking);
         }
         factory.estimateUsingBidRanks(bidRanking);
         AbstractUtilitySpace us = factory.getUtilitySpace();
