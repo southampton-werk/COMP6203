@@ -144,7 +144,7 @@ public class Agent14 extends AbstractNegotiationParty {
             Offer offer = (Offer) act;
             // storing last received offer
             lastReceivedOffer = offer.getBid();
-            System.out.println("Bid received at: " + getTimeLine().getTime());
+            System.out.println("Bid received at: " + getTimeLine().getTime() + " with utility " + getUtility(lastReceivedOffer));
             opponentModel.recievedBid(offer.getBid());
             System.out.println("Opponent model finished updating at: " + getTimeLine().getTime());
             // Storing the best bid offered by the opponent (i.e. the one with highest utility for us)
