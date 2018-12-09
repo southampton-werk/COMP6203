@@ -20,7 +20,11 @@ public class AgentSmithBiddingStrategy {
     // all deadlines must add to less than 1!
     private double modellingDeadline = 0.15; // Deadline for initial opponent modelling to stop
     private double nashOfferDeadline = modellingDeadline + 0.1; // Deadline for Nash computed bids to stop
-    private double closestToNashDeadline = nashOfferDeadline + 0.65; // Deadline for calculating closest to Nash to stop
+    private double closestToNashInitialThreshold;
+    private double closestToNashMidThreshold;
+    private double closestToNashMidDeadline = nashOfferDeadline + 0.55;
+    private double closestToNashEndThreshold;
+    private double closestToNashEndDeadline = nashOfferDeadline + 0.65; // Deadline for calculating closest to Nash to stop
     private NashPointGenerator nashPointGenerator;
     private List<Bid> alreadyOffered;
 
@@ -32,6 +36,9 @@ public class AgentSmithBiddingStrategy {
         this.agent = agent;
         nashPointGenerator = new NashPointGenerator(agent.getDomain(), agent.getUtilitySpace(), agent.getOpponentModel());
         alreadyOffered = new ArrayList<Bid>();
+        closestToNashInitialThreshold = agent.getUtilityThreshold();
+        closestToNashMidThreshold = closestToNashInitialThreshold * 0.8;
+        closestToNashEndThreshold = closestToNashInitialThreshold * 0.6;
     }
 
     /**
@@ -61,9 +68,34 @@ public class AgentSmithBiddingStrategy {
         return nashPointGenerator.getNashPoint();
     }
 
+    private double getTimeBasedUtilityThreshold(){
+        double time = this.agent.getTimeLine().getTime();
+        if(time > closestToNashEndDeadline) {
+            return closestToNashEndThreshold;
+        }
+        if(time > closestToNashMidDeadline){
+            double timePassed = time - closestToNashMidDeadline;
+            double totalTime = closestToNashEndDeadline - closestToNashMidDeadline;
+            double timePercent = timePassed / totalTime;
+            double increment = closestToNashMidThreshold - closestToNashEndThreshold;
+            double newUtility = closestToNashMidDeadline - (increment * timePercent);
+            return newUtility;
+        }
+        if(time > nashOfferDeadline){
+            double timePassed = time - nashOfferDeadline;
+            double totalTime = closestToNashMidDeadline - nashOfferDeadline;
+            double timePercent = timePassed / totalTime;
+            double increment = closestToNashInitialThreshold - closestToNashMidThreshold;
+            double newUtility = closestToNashInitialThreshold - (increment * timePercent);
+            return newUtility;
+        }
+        return closestToNashInitialThreshold;
+
+    }
+
     private Bid getNextBid() {
         // Slowly lowering utility threshold
-        agent.setUtilityThreshold(agent.getUtilityThreshold() * 0.95);
+        agent.setUtilityThreshold(this.getTimeBasedUtilityThreshold());
 
         Bid closestToNash = null;
         double closestDistance = 1; // Max distance possible
@@ -108,7 +140,7 @@ public class AgentSmithBiddingStrategy {
             // for the majority of the time, this will be the bid at the nash point
             // This means the agent will not accept anything with utility lower than at the Nash point
             agent.setUtilityThreshold(nashPointGenerator.getNashUtility());
-        } else if (time < closestToNashDeadline) {
+        } else if (time < closestToNashEndDeadline) {
             System.out.println("CLOSEST TO NASH STAGE");
             // Finished offering Nash point so now lower utility threshold and offer bids closest to the Nash point
             returnBid = getNextBid();
