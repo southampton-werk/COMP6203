@@ -1,6 +1,7 @@
 package group14;
 
 import genius.core.Bid;
+import genius.core.BidIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +18,9 @@ public class AgentSmithBiddingStrategy {
 
     private Agent14 agent;
     // all deadlines must add to less than 1!
-    private double modellingDeadline = 0.1; // Deadline for initial opponent modelling to stop
-    private double nashOfferDeadline = modellingDeadline + 0.6; // Deadline for Nash computed bids to stop
-    private double closestToNashDeadline = nashOfferDeadline + 0.2; // Deadline for calculating closest to Nash to stop
+    private double modellingDeadline = 0.15; // Deadline for initial opponent modelling to stop
+    private double nashOfferDeadline = modellingDeadline + 0.1; // Deadline for Nash computed bids to stop
+    private double closestToNashDeadline = nashOfferDeadline + 0.65; // Deadline for calculating closest to Nash to stop
     private NashPointGenerator nashPointGenerator;
     private List<Bid> alreadyOffered;
 
@@ -64,19 +65,19 @@ public class AgentSmithBiddingStrategy {
         // Slowly lowering utility threshold
         agent.setUtilityThreshold(agent.getUtilityThreshold() * 0.95);
 
-        List<Bid> orderedBids = agent.getUserModel().getBidRanking().getBidOrder();
         Bid closestToNash = null;
         double closestDistance = 1; // Max distance possible
-        // Bids are ranked from lowest to highest utility, want to start with highest
-        for (int i = orderedBids.size()-1; i >=0; i--) {
-            Bid b = orderedBids.get(i);
+        BidIterator iterator = new BidIterator(agent.getDomain());
+
+        while (iterator.hasNext()) {
+            Bid b = iterator.next();
             // Only consider those bids above the threshold
-            if (agent.getUtility(b) > agent.getUtilityThreshold()) {
+            // Also trying to avoid sending the same bid again if it wasn't accepted the first time
+            if (!alreadyOffered.contains(b) && agent.getUtility(b) >= agent.getUtilityThreshold()) {
                 double distanceToNash = nashPointGenerator.distanceToNash(b);
                 // If distance is -1, no Nash point exists
                 // If the distance is 0, this bid is the Nash point (which has already been offered before)
                 if (distanceToNash != -1 && distanceToNash != 0
-                        && !alreadyOffered.contains(b) // trying to avoid sending the same bid again if it wasn't accepted the first time
                         && distanceToNash < closestDistance) {
                     closestDistance = distanceToNash;
                     closestToNash = b;
@@ -97,18 +98,22 @@ public class AgentSmithBiddingStrategy {
         // First bid made by this agent
         // The agent is stubborn for the first 10% of the time, offering only it's initial bid
         // This is so the agent has a chance to generate a good model of the opponent (no discount factor)
-        if ((agent.getLastReceivedOffer() == null || agent.getMyLastOffer() == null) && time < modellingDeadline) {
+        if ((agent.getLastReceivedOffer() == null || agent.getMyLastOffer() == null) || time < modellingDeadline) {
+            System.out.println("MODELLING STAGE");
            returnBid = getInitialBid();
         } else if (time < nashOfferDeadline) {
+            System.out.println("NASH STAGE");
             returnBid = getNashBid();
             // Utility threshold updated to the last bid offered
             // for the majority of the time, this will be the bid at the nash point
             // This means the agent will not accept anything with utility lower than at the Nash point
             agent.setUtilityThreshold(nashPointGenerator.getNashUtility());
         } else if (time < closestToNashDeadline) {
+            System.out.println("CLOSEST TO NASH STAGE");
             // Finished offering Nash point so now lower utility threshold and offer bids closest to the Nash point
             returnBid = getNextBid();
         } else if (time < 1){
+            System.out.println("FINAL STAGE");
             // Otherwise must be in the last stretch of the negotiation
             returnBid = agent.getBestOfferSoFar();
         }
