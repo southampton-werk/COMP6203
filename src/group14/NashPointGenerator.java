@@ -170,8 +170,7 @@ public class NashPointGenerator {
             }
         }
 
-        if (nashPoint == null) {
-            System.out.println("Nash point was null");
+        /*if (nashPoint == null) {
         } else {
             try {
                 PrintWriter pw = new PrintWriter(new File("bids.csv"));
@@ -208,8 +207,7 @@ public class NashPointGenerator {
                 e.printStackTrace();
             }
 
-            System.out.println("Nash bid returned: " + nashPoint.getBid() + " with utility " + nashPoint.getAgentUtility());
-        }
+        }*/
         return nashPoint == null ? null : nashPoint.getBid();
     }
 

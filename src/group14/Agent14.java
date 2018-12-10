@@ -49,13 +49,10 @@ public class Agent14 extends AbstractNegotiationParty {
 
     @Override
     public void init(NegotiationInfo info) {
-        System.out.println("Got to init");
         super.init(info);
         this.info = info;
-        System.out.println(LocalDateTime.now() + "Starting to estimate utility....");
         // This is where the utility estimation is done - at the start only
         utilitySpace = estimateUtilitySpace();
-        System.out.println(LocalDateTime.now() + "Got passed utility estimate!");
 
         try {
             // Setting utility threshold as high as possible to begin with
@@ -71,7 +68,6 @@ public class Agent14 extends AbstractNegotiationParty {
         opponentModel = new AgentSmithOpponentModel(this.getDomain());
         acceptanceStrategy = new AgentSmithAcceptanceStrategy(this);
         biddingStrategy = new AgentSmithBiddingStrategy(this);
-        System.out.println(LocalDateTime.now() + "finished init");
     }
 
     /**
@@ -87,11 +83,9 @@ public class Agent14 extends AbstractNegotiationParty {
         // EndNegotiation not used - Reservation value is zero so our agent prefers to accept any deal rather than end the negotiation
 
         if (acceptanceStrategy.accept(lastReceivedOffer)) {
-            System.out.println("Accepted at: " + getTimeLine().getTime());
             return new Accept(this.getPartyId(), lastReceivedOffer);
         } else {
             try {
-                System.out.println("Starting to send new bid: " + getTimeLine().getTime());
                 myLastOffer = biddingStrategy.getBid();
             } catch(Exception e) {
                 e.printStackTrace();
@@ -102,7 +96,6 @@ public class Agent14 extends AbstractNegotiationParty {
             if (myLastOffer == null) {
                 myLastOffer = generateRandomBid();
             }
-            System.out.println("Bid sent at: " + getTimeLine().getTime());
             return new Offer(this.getPartyId(), myLastOffer);
         }
     }
@@ -144,9 +137,7 @@ public class Agent14 extends AbstractNegotiationParty {
             Offer offer = (Offer) act;
             // storing last received offer
             lastReceivedOffer = offer.getBid();
-            System.out.println("Bid received at: " + getTimeLine().getTime() + " with utility " + getUtility(lastReceivedOffer));
             opponentModel.recievedBid(offer.getBid());
-            System.out.println("Opponent model finished updating at: " + getTimeLine().getTime());
             // Storing the best bid offered by the opponent (i.e. the one with highest utility for us)
             if (bestOfferSoFar == null) {
                 bestOfferSoFar = lastReceivedOffer;

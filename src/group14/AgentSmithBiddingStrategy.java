@@ -24,7 +24,7 @@ public class AgentSmithBiddingStrategy {
     private double closestToNashMidThreshold;
     private double closestToNashMidDeadline = nashOfferDeadline + 0.55;
     private double closestToNashEndThreshold;
-    private double closestToNashEndDeadline = nashOfferDeadline + 0.65; // Deadline for calculating closest to Nash to stop
+    private double closestToNashEndDeadline = nashOfferDeadline + 0.675; // Deadline for calculating closest to Nash to stop
     private NashPointGenerator nashPointGenerator;
     private List<Bid> alreadyOffered;
 
@@ -37,8 +37,8 @@ public class AgentSmithBiddingStrategy {
         nashPointGenerator = new NashPointGenerator(agent.getDomain(), agent.getUtilitySpace(), agent.getOpponentModel());
         alreadyOffered = new ArrayList<Bid>();
         closestToNashInitialThreshold = agent.getUtilityThreshold();
-        closestToNashMidThreshold = closestToNashInitialThreshold * 0.8;
-        closestToNashEndThreshold = closestToNashInitialThreshold * 0.6;
+        closestToNashMidThreshold = closestToNashInitialThreshold * 0.9;
+        closestToNashEndThreshold = closestToNashInitialThreshold * 0.75;
     }
 
     /**
@@ -131,21 +131,17 @@ public class AgentSmithBiddingStrategy {
         // The agent is stubborn for the first 10% of the time, offering only it's initial bid
         // This is so the agent has a chance to generate a good model of the opponent (no discount factor)
         if ((agent.getLastReceivedOffer() == null || agent.getMyLastOffer() == null) || time < modellingDeadline) {
-            System.out.println("MODELLING STAGE");
            returnBid = getInitialBid();
         } else if (time < nashOfferDeadline) {
-            System.out.println("NASH STAGE");
             returnBid = getNashBid();
             // Utility threshold updated to the last bid offered
             // for the majority of the time, this will be the bid at the nash point
             // This means the agent will not accept anything with utility lower than at the Nash point
             agent.setUtilityThreshold(nashPointGenerator.getNashUtility());
         } else if (time < closestToNashEndDeadline) {
-            System.out.println("CLOSEST TO NASH STAGE");
             // Finished offering Nash point so now lower utility threshold and offer bids closest to the Nash point
             returnBid = getNextBid();
         } else if (time < 1){
-            System.out.println("FINAL STAGE");
             // Otherwise must be in the last stretch of the negotiation
             returnBid = agent.getBestOfferSoFar();
         }

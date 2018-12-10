@@ -46,8 +46,6 @@ public class AgentSmithOpponentModel {
 		{
 
 			om.recievedBid(d.getRandomBid(new Random()));
-			System.out.println(om.opponentBidUtility(om.d.getRandomBid(new Random())));
-
 
 
 		}

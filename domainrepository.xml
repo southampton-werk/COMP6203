@@ -731,6 +731,7 @@
             </domainRepItem>
             <domainRepItem url="file:etc/templates/BigDomain/BigDomain.xml">
                 <profile url="file:etc/templates/BigDomain/BigDomain_util1.xml"/>
+                <profile url="file:etc/templates/BigDomain/BigDomain_util2.xml"/>
             </domainRepItem>
         </domainRepItem>
         <protocolRepItem/>
