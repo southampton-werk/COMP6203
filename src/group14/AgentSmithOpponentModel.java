@@ -1,6 +1,12 @@
 package group14;
 
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -105,6 +111,7 @@ public class AgentSmithOpponentModel {
 		}
 
 
+
 	}
 
 
@@ -132,6 +139,33 @@ public class AgentSmithOpponentModel {
 		numberOfBids += 1;
 		orderOfOptions();
 		issueWeights();
+
+		if(numberOfBids == 200)
+		{
+			try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream("200bid.csv"), "utf-8"))) {
+
+				for(int i = 0; i< optionOrder.length; i ++)
+				{
+					for(int p = 0; p < optionOrder[i].length; p ++)
+					{
+						Double e = issueWeights[i] * optionOrder[i][p];
+						writer.write(e.toString() + System.lineSeparator());
+					}
+				}
+
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 
@@ -245,7 +279,7 @@ public class AgentSmithOpponentModel {
 		public int compare(Integer index1, Integer index2)
 		{
 			// Autounbox from Integer to int to use as array indexes
-			return array[index1].compareTo(array[index2]);
+			return array[index2].compareTo(array[index1]);
 		}
 	}
 
